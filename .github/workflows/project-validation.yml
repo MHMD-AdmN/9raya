@@ -1,0 +1,82 @@
+name: 9RAYA - Project Validation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Project Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Display project structure
+        run: |
+          echo "=== 9RAYA.TN PROJECT ==="
+          echo ""
+          echo "Repository:"
+          echo "${{ github.repository }}"
+          echo ""
+          echo "Branch:"
+          echo "${{ github.ref_name }}"
+          echo ""
+          echo "Commit:"
+          echo "${{ github.sha }}"
+          echo ""
+          echo "=== ROOT FILES ==="
+          find . -maxdepth 2 -type f \
+            -not -path './.git/*' \
+            | sort
+
+      - name: Validate required directories
+        shell: bash
+        run: |
+          set -e
+
+          required_dirs=(
+            "frontend"
+            "backend"
+            "database"
+            "docs"
+            ".github"
+          )
+
+          for dir in "${required_dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "ERROR: Missing directory: $dir"
+              exit 1
+            fi
+
+            echo "OK: $dir"
+          done
+
+      - name: Validate README
+        shell: bash
+        run: |
+          set -e
+
+          if [ ! -f "README.md" ]; then
+            echo "ERROR: README.md is missing."
+            exit 1
+          fi
+
+          echo "OK: README.md exists."
+
+      - name: Validation completed
+        run: |
+          echo "9RAYA.TN project structure validation completed successfully."
